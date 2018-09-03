@@ -36,11 +36,22 @@
 
 #define SLEEPING_TIME_S         (20)
 
-/* Limit for LOW Battery Alert */
+/* 
+ *  Should I ALWAYS send messages or ONLY NEW message ? 
+ *  0 : Always send messages
+ *       - even if the new message is the same as the last one (no data has changed)
+ *  1 : Only send if there is is a NEW message
+ *       - only send a message if at least a data has changed since the last message
+ *         (battery level alert, temperature, humidity or pressure in regard of the chosen MODE) 
+*/
+
+#define SEND_ONLY_NEW_MESSAGE   (0)
+
+/* Limit in mV for LOW Battery Alert */
 
 #define LOW_BATTERY_ALERT       (2750)
 
-/* Oregon protocol */
+/* Oregon Scientific protocol */
 
 #define CHANNEL                 (0x20)
 #define ID                      (0xCC)
@@ -57,17 +68,21 @@
 
 #define BME280_I2C_ADDR         (0x76)
 
-/* Here you can adjust the temperature in °C returned by the sensor */
+/* If needed, you can adjust the temperature in °C returned by the sensor */
 
-#define ADJUST_TEMPERATURE_C    (-0.9)
+#define ADJUST_TEMPERATURE_C    (-0.7)
 
-/* BME280 oversampling, filter & mode
- * should be fine for most usage in our Low Energy quest
- * modify at our own risk
- * some brief explanations below
+/* BME280 Configuration (oversampling, filter & mode)
+ * This should be fine for most usage in our Low Energy quest.
+ * Choices are:
+ *  - Forced mode (take a measurement and the chip returns to sleep)
+ *  - No filter
+ *  - Oversammpling x1 for temperature, humidity and pressure
+ * These choices are those recommended by Bosch Sensortec in their datasheet
+ * for our use (weather station: minimal power consumption)
+ * Some brief explanations are below if you want to modify these default settings
 */
 
-#ifdef MODE
 #define BME280_CTRL_CONFIG      (0b00000000)
 #if MODE == 0
 #define BME280_CTRL_HUM         (0b00000000)
@@ -78,7 +93,6 @@
 #else
 #define BME280_CTRL_HUM         (0b00000001)
 #define BME280_CTRL_MEAS        (0b00100101)
-#endif
 #endif
 
 /********************************************/

@@ -62,7 +62,6 @@ inline void mcu_sleep(uint8_t wdt_period)
   for (uint8_t i = wdt_period; i > 0; i--)
     __asm__ __volatile__("sleep");
   
-
   // Enable ADC (Analog Digital Converter)
   // needed for measurements with bandgap voltage reference : 
   // 25 ADC clock cycles vs 13 if ADC is not re-enabled
@@ -91,7 +90,7 @@ void setup()
   // sensor: bme280
   bme280_init(&bme);
 
-  // oregon protocol
+  // oregon scientific protocol
   oregon_init();
   
   // mcu: set watchdog & power-down mode
@@ -107,17 +106,17 @@ void loop()
   // prepare message
   oregon_set_battery_level(mcu_read_vcc() > LOW_BATTERY_ALERT);
   oregon_set_temperature(bme.temperature / 100.0);
-  if (MODE != 0)
-    oregon_set_humidity(lrintf(bme.humidity / 1024.0));
-  if (MODE == 2)
+#if MODE
+  oregon_set_humidity(lrintf(bme.humidity / 1024.0));
+#endif
+#if MODE == 2
     oregon_set_pressure(bme.pressure / 100.0);
+#endif
 
   // send message
+  // this is the responsability of the oregon scientific emitter to take care of
+  // sending or not all messages (in respect of SEND_ONLY_NEW_MESSAGE option)
   oregon_send_message();
-  SEND_LOW();
-  delayMicroseconds(TWOTIME*8);
-  oregon_send_message();
-  SEND_LOW();
 
   // go to sleep
   // wdt prescaler has been fixed to roughly 8s by period

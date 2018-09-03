@@ -18,17 +18,23 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  * 
- * Slightly modified by conurb (09/2018) : 
+ * Slightly modified by conurb@online.fr (2018) : 
  * - split code in .cpp & .h files
- * - simpler api usage in code
- * - some renaming
- * - a very little byte hunting (only 8kb available on an ATtiny85)
+ * - much simpler api (abstract irrelevant stuff from user of api)
  * 
 */
 
 #include "oregon_scientific_emitter.h"
 
-byte OregonMessageBuffer[MESSAGE_BUF_LEN];
+byte OregonMessageBuffer[MESSAGE_BUF_LEN] = {0};
+
+#if SEND_ONLY_NEW_MESSAGE
+byte MutableDataInLastMessage[MUTABLE_DATA_LEN] = {0};
+#endif
+
+/******************************************************************/
+/******************* INTERNAL STUFF (low level) *******************/
+/******************************************************************/
 
 /**
  * \brief    Send logical "0" over RF
@@ -93,7 +99,7 @@ inline void sendQuarterLSB(const byte data)
 }
  
 /******************************************************************/
-/******************************************************************/
+/************************* INTERNAL STUFF *************************/
 /******************************************************************/
  
 /**
@@ -101,7 +107,7 @@ inline void sendQuarterLSB(const byte data)
  * \param    data   Data to send
  * \param    size   size of data to send
  */
-void sendData(byte* data, byte size)
+void sendData(const byte* data, byte size)
 {
   for(byte i = 0; i < size; ++i)
   {
@@ -159,16 +165,16 @@ int Sum(byte count, const byte* data)
  * \brief    Calculate checksum
  * \param    data       Oregon message
  */
-void calculateAndSetChecksum(byte* data)
+void calculate_and_set_checksum(byte* data)
 {
 #if MODE == 0
-    int s = ((Sum(6, data) + (data[6]&0xF) - 0xa) & 0xff);
-    data[6] |=  (s&0x0F) << 4;
-    data[7] =   (s&0xF0) >> 4;
+  int s = ((Sum(6, data) + (data[6]&0xF) - 0xa) & 0xff);
+  data[6] |=  (s&0x0F) << 4;
+  data[7] =   (s&0xF0) >> 4;
 #elif MODE == 1
-    data[8] = ((Sum(8, data) - 0xa) & 0xFF);
+  data[8] = ((Sum(8, data) - 0xa) & 0xFF);
 #else
-    data[10] = ((Sum(10, data) - 0xa) & 0xFF);
+  data[10] = ((Sum(10, data) - 0xa) & 0xFF);
 #endif
 }
  
@@ -181,22 +187,81 @@ inline void sendSync(void)
 {
   sendQuarterLSB(0xA);
 }
- 
+
+/**
+ * \brief    Set the sensor type
+ * \param    type       Sensor type
+ * \param    data       Oregon message
+ */
+static inline void oregon_set_type(byte* type, byte* data = OregonMessageBuffer) 
+{
+  data[0] = type[0];
+  data[1] = type[1];
+}
+
+/**
+ * \brief    Set the sensor channel
+ * \param    channel    Sensor channel (0x10, 0x20, 0x30)
+ * \param    data       Oregon message
+ */
+static inline void oregon_set_channel(byte channel, byte* data = OregonMessageBuffer) 
+{
+  data[2] = channel;
+}
+
+/**
+ * \brief    Set the sensor ID
+ * \param    ID         Sensor unique ID
+ * \param    data       Oregon message
+ */
+static inline void oregon_set_id(byte id, byte* data = OregonMessageBuffer) 
+{
+  data[3] = id;
+}
+
+/**
+ * \brief    Send message data an Oregon message (RF)
+ * \param    data   The Oregon message
+ */
+static void oregon_send_message_data(const byte* data, byte size)
+{
+  sendPreamble();
+  //sendSync();
+  sendData(data, size);
+  sendPostamble();
+}
+
 /******************************************************************/
-/******************************************************************/
+/****************************** API *******************************/
 /******************************************************************/
 
 /**
  * \brief    Send an Oregon message
  * \param    data   The Oregon message
  */
-void oregon_send_message(byte *data, byte size)
+void oregon_send_message(byte* data, byte size)
 {
-    calculateAndSetChecksum(data);
-    sendPreamble();
-    //sendSync();
-    sendData(data, size);
-    sendPostamble();
+  // finalize data buffer
+  calculate_and_set_checksum(data);
+
+#if SEND_ONLY_NEW_MESSAGE
+  
+  // if nothing has changed in mutable datas, job done! go out
+  if(!memcmp(&OregonMessageBuffer[IMMUTABLE_DATA_LEN], MutableDataInLastMessage, MUTABLE_DATA_LEN))
+    return;
+    
+  // if something has changed, make a copy of the mutable datas
+  // before sending message (7 bytes max, fast & cheap)
+  memcpy(MutableDataInLastMessage, &OregonMessageBuffer[IMMUTABLE_DATA_LEN], MUTABLE_DATA_LEN);
+  
+#endif
+
+  // send message
+  oregon_send_message_data(data, size);
+  SEND_LOW();
+  delayMicroseconds(TWOTIME*8);
+  oregon_send_message_data(data, size);
+  SEND_LOW();
 }
 
 /**
@@ -204,7 +269,7 @@ void oregon_send_message(byte *data, byte size)
  * \param    level      Battery level (0 = low, 1 = high)
  * \param    data       Oregon message
  */
-void oregon_set_battery_level(byte level, byte *data)
+void oregon_set_battery_level(byte level, byte* data)
 {
   if(!level) data[4] = 0x0C;
   else data[4] = 0x00;
@@ -215,7 +280,7 @@ void oregon_set_battery_level(byte level, byte *data)
  * \param    temp       the temperature
  * \param    data       Oregon message
  */
-void oregon_set_temperature(float temp, byte *data) 
+void oregon_set_temperature(float temp, byte* data) 
 {
   // Set temperature sign
   if(temp < 0)
@@ -259,43 +324,12 @@ void oregon_set_humidity(byte hum, byte* data)
  * \param    pres       the pressure
  * \param    data       Oregon message
  */
-void oregon_set_pressure(float pres, byte *data) 
+void oregon_set_pressure(float pres, byte* data) 
 {
   if ((pres > 850) && (pres < 1100)) {
     data[9] = 0xC0;
     data[8] = (int)lrintf(pres) - 856;  
   }
-}
-
-/**
- * \brief    Set the sensor type
- * \param    type       Sensor type
- * \param    data       Oregon message
- */
-static inline void oregon_set_type(byte* type, byte *data = OregonMessageBuffer) 
-{
-  data[0] = type[0];
-  data[1] = type[1];
-}
-
-/**
- * \brief    Set the sensor channel
- * \param    channel    Sensor channel (0x10, 0x20, 0x30)
- * \param    data       Oregon message
- */
-static inline void oregon_set_channel(byte channel, byte *data = OregonMessageBuffer) 
-{
-    data[2] = channel;
-}
-
-/**
- * \brief    Set the sensor ID
- * \param    ID         Sensor unique ID
- * \param    data       Oregon message
- */
-static inline void oregon_set_id(byte id, byte *data = OregonMessageBuffer) 
-{
-  data[3] = id;
 }
 
 /**
