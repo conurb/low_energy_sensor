@@ -259,9 +259,14 @@ void oregon_send_message(byte* data, byte size)
   // send message
   oregon_send_message_data(data, size);
   SEND_LOW();
+
+#if SEND_MESSAGE_TWICE
+
   delayMicroseconds(TWOTIME*8);
   oregon_send_message_data(data, size);
   SEND_LOW();
+
+#endif
 }
 
 /**

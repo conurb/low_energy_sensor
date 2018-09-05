@@ -37,15 +37,25 @@
 #define SLEEPING_TIME_S         (20)
 
 /* 
- *  Should I ALWAYS send messages or ONLY NEW message ? 
- *  0 : Always send messages
- *       - even if the new message is the same as the last one (no data has changed)
- *  1 : Only send if there is is a NEW message
- *       - only send a message if at least a data has changed since the last message
- *         (battery level alert, temperature, humidity or pressure in regard of the chosen MODE) 
+ * Should I ALWAYS send messages or ONLY NEW message ? 
+ * 0 : Always send messages
+ *      - even if the new message is the same as the last one (no data has changed)
+ * 1 : Only send if there is a NEW message
+ *      - only send a message if at least a data has changed since the last message
+ *        (battery level alert, temperature, humidity or pressure in regard of the chosen MODE) 
 */
 
 #define SEND_ONLY_NEW_MESSAGE   (0)
+
+/*
+ * Should I send a message twice ?
+ * A real Oregon Scientific sensor sends a message twice but if you have a good RF reception, 
+ * imho, sending a message twice is a waste of energy.
+ * 0 : Don't send a message twice
+ * 1 : Send a message twice
+*/
+
+#define SEND_MESSAGE_TWICE      (1)
 
 /* Limit in mV for LOW Battery Alert */
 
