@@ -6,17 +6,13 @@
 /********************************************/
 
 /*  
- *   wiring (ATtiny85):
+ *   Wiring (ATtiny85):
  *                             +-------+
  *                            1|*      |8  VCC
  *                            2|       |7  SCL (BME280)
  *   Data TX RF 433Mhz - PB4  3|       |6
  *                       GND  4|       |5  SDA (BME280)
  *                             +-------+
- *
- *   Warning:
- *     - BME280 MAX supported voltage is 3.6v (DS 1 Table 1.1)
- *     
 */
   
 /***
@@ -63,13 +59,15 @@
 
 /* Oregon Scientific protocol */
 
-/* CHANNEL
+/* 
+ * CHANNEL
  * You could safely keep this as is
 */
 
 #define CHANNEL                 (0x20)
 
-/* ID
+/* 
+ * ID
  * Each sensor must have a unique ID
  * eg:
  * - first sensor:  0xCC
