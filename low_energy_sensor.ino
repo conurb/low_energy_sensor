@@ -1,5 +1,5 @@
 /*
- *  Low Energy Sensor v0.1
+ *  Low Energy Sensor v1.0
  *  mcu:          ATtiny85
  *  sensor:       BME280 (Bosch Sensortec) [ONLY in i2c, NOT in spi]
  *  transmission: RF 433Mhz (Olivier Lebrun's Oregon Scientific Emitter)
@@ -22,7 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *  
  *
- *  Wiring:
+ *  Wiring (ATtiny85):
  *                            +-------+
  *                           1|*      |8  VCC
  *                           2|       |7  SCL (BME280)
@@ -110,7 +110,7 @@ void loop()
   oregon_set_humidity(lrintf(bme.humidity / 1024.0));
 #endif
 #if MODE == 2
-    oregon_set_pressure(bme.pressure / 100.0);
+  oregon_set_pressure(bme.pressure / 100.0);
 #endif
 
   // send message

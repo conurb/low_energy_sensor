@@ -211,6 +211,7 @@ bme280_init(BME280* bme)
   if (bme280_read_register(BME280_REG_CHIP_ID, 1, &chip_id) && chip_id != 0x60)
     return 0;
     
+  // get data calibration for compensation
   if (!bme280_get_calibration_data(bme))
     return 0;
 

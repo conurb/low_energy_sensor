@@ -220,7 +220,7 @@ static inline void oregon_set_id(byte id, byte* data = OregonMessageBuffer)
 }
 
 /**
- * \brief    Send message data an Oregon message (RF)
+ * \brief    Send message data (RF)
  * \param    data   The Oregon message
  */
 static void oregon_send_message_data(const byte* data, byte size)
@@ -236,7 +236,7 @@ static void oregon_send_message_data(const byte* data, byte size)
 /******************************************************************/
 
 /**
- * \brief    Send an Oregon message
+ * \brief    Send an Oregon message (RF)
  * \param    data   The Oregon message
  */
 void oregon_send_message(byte* data, byte size)

@@ -23,13 +23,14 @@
 #endif
 
 #if SEND_ONLY_NEW_MESSAGE
-// This is for rapidly checking if there is a new message
-// I could have only check the checksum but it seems
-// that could create 'false positive' (maybe I'm wrong but, in doubt,
-// I prefer to take a very safe way of doing it...)
-
-// Immutable datas length in message 
-// (header message length: this is Type, Channel & Id)
+/* This is for rapidly checking if this is a new message
+ * I could have only checked the checksum but it seems
+ * that could create 'false positive' (maybe I'm wrong but, in doubt,
+ * I prefer to take a very safe way of doing it...)
+ *
+ * Immutable datas length in message 
+ * (header message length: this is Type, Channel & Id)
+*/
 #define IMMUTABLE_DATA_LEN 4
 
 // Mutable datas length in message
@@ -40,9 +41,11 @@
 // Buffer for Oregon message
 extern byte OregonMessageBuffer[MESSAGE_BUF_LEN];
 
+// Oregon Protocol timing
 const unsigned long TIME = 512;
 const unsigned long TWOTIME = TIME*2;
 
+/******************** API *******************/
 void oregon_init();
 void oregon_set_battery_level(byte level, byte* data = OregonMessageBuffer);
 void oregon_set_temperature(float temp, byte* data = OregonMessageBuffer);

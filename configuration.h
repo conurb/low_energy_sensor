@@ -63,7 +63,23 @@
 
 /* Oregon Scientific protocol */
 
+/* CHANNEL
+ * You could safely keep this as is
+*/
+
 #define CHANNEL                 (0x20)
+
+/* ID
+ * Each sensor must have a unique ID
+ * eg:
+ * - first sensor:  0xCC
+ * - second sensor: 0xCD
+ * - third sensor:  0xCE
+ * - fourth sensor: 0xCF
+ * - fifth sensor:  0xD0
+ * - etc...
+*/
+
 #define ID                      (0xCC)
 
 

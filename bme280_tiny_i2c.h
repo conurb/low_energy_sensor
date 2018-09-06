@@ -52,6 +52,7 @@ typedef struct {
   struct calibration_data calib_data;
 } BME280;
 
+/******************** API *******************/
 uint8_t bme280_read_sensor(BME280*);
 uint8_t bme280_init(BME280*);
 
