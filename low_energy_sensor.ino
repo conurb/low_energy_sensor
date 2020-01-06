@@ -78,7 +78,12 @@ inline int mcu_read_vcc()
   delay(2);
   ADCSRA |= (1 << ADSC);         // start conversion (DS 17.3.2)
   while (ADCSRA & (1 << ADSC));  // wait while conversion is in progress
-  return ((uint32_t)1024 * 1100) / ((ADCH << 8) | ADCL);
+  // ADC data
+  // DS 17.3 : ADCL has to be read first
+  byte low, high;
+  low = ADCL;
+  high = ADCH;
+  return ((uint32_t)1024 * 1100) / ((high << 8) | low);
 }
 
 void setup()
