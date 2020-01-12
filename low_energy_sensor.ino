@@ -112,7 +112,8 @@ void loop()
   oregon_set_battery_level(mcu_read_vcc() > LOW_BATTERY_ALERT);
   oregon_set_temperature(bme.temperature / 100.0);
 #if MODE
-  oregon_set_humidity(lrintf(bme.humidity / 1024.0));
+  uint8_t h = lrintf(bme.humidity / 1024.0);
+  oregon_set_humidity(h > 99 ? 99 : h);
 #endif
 #if MODE == 2
   oregon_set_pressure(bme.pressure / 100.0);
